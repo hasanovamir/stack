@@ -1,7 +1,6 @@
 #include "stack.h"
-#include "macros.h"
 
-StackErr_t scan_and_pocessing (stack_t* stk)
+stack_err_t scan_and_pocessing (stack_t* stk)
 {
     STACK_OK (stk);
 
@@ -11,14 +10,19 @@ StackErr_t scan_and_pocessing (stack_t* stk)
     {
         RETURN_IF_ERR (scan_input_operation (&parametrs));
 
-        RETURN_IF_ERR (processing_scaned_oper (&parametrs, stk));
+        stack_err_t status = processing_scaned_oper (&parametrs, stk);
+
+        if (status == finish_scan)
+            return success;
+        else
+            RETURN_IF_ERR (status);
     }
 }
 
 
-StackErr_t scan_input_operation (operation_params* parametrs)
+stack_err_t scan_input_operation (operation_params* parametrs)
 {
-    ASSERT (parametrs != NULL);
+    DEBUG_ASSERT (parametrs != NULL);
 
     char tmp[6] = "";
     if (scanf ("%s", tmp) == 0)
@@ -47,13 +51,13 @@ StackErr_t scan_input_operation (operation_params* parametrs)
     else
         return scan_oper_err;
 
-    return cor_func_oper;
+    return success;
 }
 
 
-StackErr_t processing_scaned_oper (operation_params* parametrs, stack_t* stk)
+stack_err_t processing_scaned_oper (operation_params* parametrs, stack_t* stk)
 {
-    ASSERT (parametrs != NULL);
+    DEBUG_ASSERT (parametrs != NULL);
     STACK_OK (stk);
 
     stack_val_t a = 0;
@@ -62,43 +66,42 @@ StackErr_t processing_scaned_oper (operation_params* parametrs, stack_t* stk)
     switch (parametrs->operation)
     {
         case PUSH:
-            RETURN_IF_ERR (StackPush (stk, parametrs->value));
+            RETURN_IF_ERR (stack_push (stk, parametrs->value));
             break;
         case OUT:
-            RETURN_IF_ERR (StackPop (stk, &a));
+            RETURN_IF_ERR (stack_pop (stk, &a));
             printf ("%d\n", a);
             break;
         case ADD:
-            RETURN_IF_ERR (StackPop (stk, &a));
-            RETURN_IF_ERR (StackPop (stk, &b));
-            RETURN_IF_ERR (StackPush (stk, a + b));
+            RETURN_IF_ERR (stack_pop (stk, &a));
+            RETURN_IF_ERR (stack_pop (stk, &b));
+            RETURN_IF_ERR (stack_push (stk, a + b));
             break;
         case SUB:
-            RETURN_IF_ERR (StackPop (stk, &a));
-            RETURN_IF_ERR (StackPop (stk, &b));
-            RETURN_IF_ERR (StackPush (stk, b - a));
+            RETURN_IF_ERR (stack_pop (stk, &a));
+            RETURN_IF_ERR (stack_pop (stk, &b));
+            RETURN_IF_ERR (stack_push (stk, b - a));
             break;
         case DIV:
-            RETURN_IF_ERR (StackPop (stk, &a));
-            RETURN_IF_ERR (StackPop (stk, &b));
-            RETURN_IF_ERR (StackPush (stk, b / a));
+            RETURN_IF_ERR (stack_pop (stk, &a));
+            RETURN_IF_ERR (stack_pop (stk, &b));
+            RETURN_IF_ERR (stack_push (stk, b / a));
             break;
         case MUL:
-            RETURN_IF_ERR (StackPop (stk, &a));
-            RETURN_IF_ERR (StackPop (stk, &b));
-            RETURN_IF_ERR (StackPush (stk, a * b));
+            RETURN_IF_ERR (stack_pop (stk, &a));
+            RETURN_IF_ERR (stack_pop (stk, &b));
+            RETURN_IF_ERR (stack_push (stk, a * b));
             break;
         case HLT:
-            RETURN_IF_ERR (StackDestroy (stk));
-            exit (1);//X3
+            return finish_scan;
             break;
         case sqvRT:
-            RETURN_IF_ERR (StackPop (stk, &a));
-            RETURN_IF_ERR (StackPush (stk, (stack_val_t)sqrt (a)));
+            RETURN_IF_ERR (stack_pop (stk, &a));
+            RETURN_IF_ERR (stack_push (stk, (stack_val_t)sqrt (a)));
             break;
         default:
             return scan_oper_err;
     }
 
-    return cor_func_oper;
+    return success;
 }
